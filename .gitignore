@@ -8,3 +8,4 @@ logs
 tsconfig.json
 .prettierrc.yaml
 nodemon.json
+.idea
