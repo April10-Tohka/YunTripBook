@@ -7,53 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model flightmanage {
-  flightNo           String    @id @db.Char(6)
-  departCity         String    @db.VarChar(15)
-  arriveCity         String    @db.VarChar(15)
-  departPortName     String    @db.VarChar(10)
-  arrivePortName     String    @db.VarChar(10)
-  departTime         DateTime  @db.Time(0)
-  arriveTime         DateTime  @db.Time(0)
-  price              Int?
-  airlineCompanyName String    @db.VarChar(10)
-  aircraftType       String    @db.VarChar(10)
-  departDate         DateTime? @db.Date
-  seatCount          Int?
-  bookedCount        Int?
-  remainingCount     Int?
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model flightorder {
-  orderID            String    @id @db.Char(11)
-  name               String    @db.VarChar(10)
-  identity           String    @db.Char(18)
-  phone              String?   @db.Char(11)
-  flightNo           String    @db.Char(6)
-  status             Int       @default(0)
-  bookDate           DateTime? @db.Date
-  bookTime           DateTime? @db.Time(0)
-  price              Int?
-  departCity         String?   @db.VarChar(10)
-  arriveCity         String?   @db.VarChar(10)
-  departTime         DateTime? @db.Time(0)
-  arriveTime         DateTime? @db.Time(0)
-  departPortName     String?   @db.VarChar(10)
-  arrivePortName     String?   @db.VarChar(10)
-  airlineCompanyName String?   @db.VarChar(10)
-}
-
 model user {
-  id           Int     @id @default(autoincrement())
-  phone        String? @unique(map: "phone") @db.VarChar(255)
-  passwordHash String  @db.VarChar(255)
-}
-
-model verification {
-  id        Int      @id @default(autoincrement())
-  phone     String   @unique(map: "phone") @db.VarChar(255)
-  captcha   String   @db.VarChar(255)
-  expiresAt DateTime @db.DateTime(0)
+  user_id              String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  user_name            String?   @db.VarChar(50)
+  phone                String    @db.Char(11)
+  password_hash        String    @db.VarChar(50)
+  create_at            DateTime? @default(dbgenerated("(now())")) @db.Timestamp(0)
+  gender               String?   @db.Char(2)
+  birthdate            DateTime? @db.Date
+  email                String?   @db.VarChar(17)
+  failed_login_attempt Int?
+  last_Login           DateTime? @db.Timestamp(0)
+  registration_ip      String?   @db.VarChar(15)
+  avatar_url           String?   @db.VarChar(100)
+  update_at            DateTime? @db.Timestamp(0)
 }

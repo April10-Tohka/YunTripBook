@@ -9,3 +9,5 @@ tsconfig.json
 .prettierrc.yaml
 nodemon.json
 .idea
+prisma
+dist
