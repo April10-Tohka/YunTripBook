@@ -23,8 +23,11 @@ log4js.configure({
     },
 });
 const logger = log4js.getLogger();
-const loggerMiddleWare = (req, res, next) => {
+export const loggerMiddleWare = (req, res, next) => {
     logger.info("[ API call started ]", { method: req.method, url: req.url });
     next();
 };
-export default loggerMiddleWare;
+
+export const loggerErrorMiddleWare = (err, req, res, next) => {
+    logger.error("[ API call failed ]", { method: req.method, url: req.url });
+};
