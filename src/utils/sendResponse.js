@@ -1,8 +1,4 @@
 /**
- *
- */
-
-/**
  * 统一响应格式的函数
  * @param res
  * @param opts
@@ -28,46 +24,25 @@
  * @param {string} [opts.timestamp] - A timestamp for when the response was generated.
  */
 export const sendResponse = (res, opts) => {
-    const {
-        data = null,
-        code = 200,
-        message = "Success",
-        status = code >= 200 && code < 300,
-        error = null,
-        timestamp = new Date().toLocaleString(),
-    } = opts;
-    res.status(code).json({
-        status,
-        code,
-        message,
-        data,
-        error,
-        timestamp,
-    });
+    const response = {
+        data: opts.data || null,
+        code: opts.code || 200,
+        message: opts.message || "Success",
+        status: opts.code >= 200 && opts.code < 300,
+        error: null,
+        timestamp: new Date().toLocaleString(),
+    };
+    res.status(response.code).json(response);
 };
 
-/**
- * Sends a standardized error response to the client.
- *
- * @param {Object} res - The response object from the Express framework.
- * @param {Error|string} error - The error object or error message to be sent in the response.
- * @param {number} [code=500] - The HTTP status code to be used in the response.
- * @param {string} [message='Internal Server Error'] - A message describing the error.
- * @param {*} [data=null] - Additional data to be sent with the error response.
- */
-export const sendError = (
-    res,
-    error,
-    code = 500,
-    message = "Internal Server Error",
-    data = null
-) => {
-    res.status(code).json({
+export const sendError = (res, opts) => {
+    const error = {
+        data: null,
+        code: opts.code || 500,
+        message: opts.message || "Internal Server Error",
         status: false,
-        code,
-        message,
-        data,
-        error: error.message || error.toString(),
-        timestamp: new Date().toISOString(),
-    });
+        error: opts.error || opts.message,
+        timestamp: new Date().toLocaleString(),
+    };
+    res.status(error.code).json(error);
 };
