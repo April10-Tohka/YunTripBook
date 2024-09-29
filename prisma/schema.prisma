@@ -11,7 +11,7 @@ model user {
   user_id              String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
   user_name            String?   @db.VarChar(50)
   phone                String    @db.Char(11)
-  password_hash        String    @db.VarChar(50)
+  password_hash        String    @db.Char(60)
   create_at            DateTime? @default(dbgenerated("(now())")) @db.Timestamp(0)
   gender               String?   @db.Char(2)
   birthdate            DateTime? @db.Date
@@ -21,4 +21,17 @@ model user {
   registration_ip      String?   @db.VarChar(15)
   avatar_url           String?   @db.VarChar(100)
   update_at            DateTime? @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model filght {
+  flight_id String @id @db.VarChar(10)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model passenger {
+  passenger_id             Int    @id @default(dbgenerated("(uuid_short())"))
+  passenger_name           String @db.VarChar(20)
+  passenger_phone          String @db.Char(11)
+  passenger_id_card_number String @unique(map: "passenger_pk_passenger_id_card_number") @db.Char(18)
 }
