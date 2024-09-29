@@ -6,14 +6,14 @@ const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 
 // 生成访问令牌
-const generateAccessToken = (payload) => {
+export const generateAccessToken = (payload) => {
     return jwt.sign(payload, ACCESS_TOKEN_SECRET, {
         expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     });
 };
 
 // 生成刷新令牌
-const generateRefreshToken = (payload) => {
+export const generateRefreshToken = (payload) => {
     return jwt.sign(payload, REFRESH_TOKEN_SECRET, {
         expiresIn: REFRESH_TOKEN_EXPIRES_IN,
     });
