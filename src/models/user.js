@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 
 class User {
     constructor() {
-        console.log("user模块初始化会实例化prisma");
         this.prisma = new PrismaClient();
     }
 
@@ -22,10 +21,10 @@ class User {
                     },
                 })
                 .then((user) => {
-                    resolve(true);
+                    resolve({ status: true, data: user });
                 })
                 .catch((err) => {
-                    reject(false);
+                    reject({ status: false, error: err });
                 });
         });
     }
@@ -37,16 +36,23 @@ class User {
     queryUserByPhone(phone) {
         return new Promise((resolve, reject) => {
             this.prisma.user
-                .findUnique({
+                .findFirst({
                     where: {
                         phone,
                     },
                 })
-                .then((user) => {
-                    console.log("查询成功！user:", user);
+                .then((result) => {
+                    console.log("数据库查询成功！user:", result);
+                    //数据库中存在该用户
+                    if (result) {
+                        console.log("数据库中存在该用户user", result);
+                        resolve({ exit: true, user: result });
+                    }
+                    resolve({ exit: false, user: result });
                 })
                 .catch((err) => {
-                    console.log("查询失败!err:", err);
+                    console.log("数据库查询失败!err:", err);
+                    reject(err);
                 });
         });
     }
