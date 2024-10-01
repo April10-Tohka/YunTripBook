@@ -10,7 +10,7 @@ datasource db {
 model user {
   user_id              String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
   user_name            String?   @default("尊敬的会员") @db.VarChar(50)
-  phone                String    @db.Char(11)
+  phone                String    @unique(map: "user_unique_key_Phone") @db.Char(11)
   password_hash        String    @db.Char(60)
   create_at            DateTime? @default(dbgenerated("(now())")) @db.Timestamp(0)
   gender               String?   @db.Char(2)
@@ -19,13 +19,8 @@ model user {
   failed_login_attempt Int?
   last_Login           DateTime? @db.Timestamp(0)
   registration_ip      String?   @db.VarChar(15)
-  avatar_url           String?   @db.VarChar(100)
+  avatar_url           String?   @default("https://dimg04.c-ctrip.com/images/0AS1k120009l60yh36D69.jpg") @db.VarChar(100)
   update_at            DateTime? @db.Timestamp(0)
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model filght {
-  flight_id String @id @db.VarChar(10)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -34,4 +29,25 @@ model passenger {
   passenger_name           String @db.VarChar(20)
   passenger_phone          String @db.Char(11)
   passenger_id_card_number String @unique(map: "passenger_pk_passenger_id_card_number") @db.Char(18)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model flight {
+  flight_no            String    @id @db.VarChar(8)
+  aircraft_type        String?   @db.Char(3)
+  depart_time          DateTime? @db.Time(0)
+  arrive_time          DateTime? @db.Time(0)
+  depart_city_code     String?   @db.Char(3)
+  depart_port_name     String?   @db.VarChar(10)
+  depart_port_code     String?   @db.Char(3)
+  depart_terminal      String?   @db.Char(2)
+  arrive_city_code     String?   @db.Char(3)
+  arrive_port_name     String?   @db.VarChar(10)
+  arrive_port_code     String?   @db.Char(3)
+  arrive_terminal      String?   @db.Char(2)
+  depart_date          DateTime? @db.Date
+  on_time_rate         String?   @db.VarChar(4)
+  price                Int?
+  airline_company_name String?   @db.VarChar(10)
+  airline_code         String?   @db.Char(2)
 }
