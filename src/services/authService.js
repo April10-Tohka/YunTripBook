@@ -191,13 +191,14 @@ class AuthService {
                 .then((hashedPassword) => {
                     return User.createUser(phone, hashedPassword);
                 })
-                .then((user) => {
+                .then(({ data }) => {
+                    console.log("创建用户之后,", data);
                     const payload = {
-                        userId: user.user_id,
-                        userName: user.user_name,
-                        phone: user.phone,
-                        createAt: user.create_at,
-                        avatarUrl: user.avatar_url,
+                        userId: data.user_id,
+                        userName: data.user_name,
+                        phone: data.phone,
+                        createAt: data.create_at,
+                        avatarUrl: data.avatar_url,
                     };
                     // 生成 Access Token
                     const accessToken = generateAccessToken(payload);
