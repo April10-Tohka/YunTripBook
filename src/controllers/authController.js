@@ -103,7 +103,7 @@ class AuthController {
                 .then((data) => {
                     console.log("设置密码成功", data);
                     // 设置 HttpOnly Cookie
-                    res.cookie("refreshToken", data.refreshToken, {
+                    res.cookie("refreshToken", data.data.refreshToken, {
                         httpOnly: true, // 防止JS访问
                         sameSite: "Strict", // 防止CSRF攻击
                         maxAge: 24 * 60 * 60 * 1000, // 1天

@@ -176,81 +176,6 @@ class AuthService {
                 .catch((err) => {
                     reject(err);
                 });
-            // this.redis
-            //     .hget(`phone:${phone}`, "fail_attempts_cooldown")
-            //     .then((isCooldown) => {
-            //         console.log(`该手机号${phone}是否被冷却:${isCooldown}`);
-            //         if (isCooldown) {
-            //             throw {
-            //                 code: 429,
-            //                 message: "失败次数过多。请 30 分钟后重试。",
-            //             };
-            //         }
-            //         //检查验证码是否正确
-            //         return this.redis
-            //             .get(`captcha:${phone}`)
-            //             .then((storeCaptcha) => {
-            //                 console.log("storeCode:", storeCaptcha);
-            //                 //验证码不存在(验证码过期了)
-            //                 if (!storeCaptcha) {
-            //                     throw {
-            //                         code: 400,
-            //                         message: "验证码已过期或不存在",
-            //                     };
-            //                 }
-            //                 //验证验证码不通过
-            //                 if (captcha !== storeCaptcha) {
-            //                     //增加验证失败次数
-            //                     return this.redis
-            //                         .hincrby(
-            //                             `phone:${phone}`,
-            //                             "fail_attempts",
-            //                             1
-            //                         )
-            //                         .then((failAttempts) => {
-            //                             //达到最大失败次数，该手机号无法继续输入验证码并设置 30 分钟的冷却时间
-            //                             if (
-            //                                 failAttempts >=
-            //                                 this.#MAX_FAILED_ATTEMPTS
-            //                             ) {
-            //                                 return Promise.all([
-            //                                     this.redis.hset(
-            //                                         `phone:${phone}`,
-            //                                         {
-            //                                             fail_attempts_cooldown: true,
-            //                                         }
-            //                                     ),
-            //                                     this.redis.expire(
-            //                                         `phone:${phone}`,
-            //                                         this
-            //                                             .#FAILED_ATTEMPTS_COOLDOWN
-            //                                     ),
-            //                                 ]).then(() => {
-            //                                     throw {
-            //                                         code: 429,
-            //                                         message:
-            //                                             "失败次数过多。请 30 分钟后重试。",
-            //                                     };
-            //                                 });
-            //                             }
-            //                             //没有达到最大失败次数,无效验证码
-            //                             throw {
-            //                                 code: 400,
-            //                                 message: "无效验证码",
-            //                             };
-            //                         });
-            //                 }
-            //                 //验证码通过,删除 Redis 中的验证码和失败次数记录
-            //                 return this.redis
-            //                     .del([`captcha:${phone}`, `phone:${phone}`])
-            //                     .then(() => {
-            //                         resolve({ message: "验证码通过" });
-            //                     });
-            //             });
-            //     })
-            //     .catch((err) => {
-            //         reject(err);
-            //     });
         });
     }
 
@@ -261,52 +186,54 @@ class AuthService {
     setPasswordAndCreateUser(phone, password) {
         return new Promise((resolve, reject) => {
             //加密密码并保存用户到数据库中
-            bcrypt.hash(password, this.#saltRounds).then((hashedPassword) => {
-                User.createUser(phone, hashedPassword)
-                    .then((user) => {
-                        const payload = {
-                            userId: user.user_id,
-                            userName: user.user_name,
-                            phone: user.phone,
-                            createAt: user.create_at,
-                            avatarUrl: user.avatar_url,
-                        };
-                        // 生成 Access Token
-                        const accessToken = generateAccessToken(payload);
-                        // 生成 Refresh Token
-                        const refreshToken = generateRefreshToken(payload);
-                        // 保存 Token 到 Redis 中
-                        Promise.all([
-                            this.redis.setex(
-                                `user:${phone}:accessToken`,
-                                this.#ACCESS_TOKEN_EXPIRES_IN,
-                                accessToken
-                            ),
-                            this.redis.setex(
-                                `user:${phone}:refreshToken`,
-                                this.#REFRESH_TOKEN_EXPIRES_IN,
-                                refreshToken
-                            ),
-                        ])
-                            .then((data) => {
-                                resolve({
-                                    code: 201,
-                                    message: "用户注册成功",
-                                    data: { accessToken, refreshToken },
-                                });
-                            })
-                            .catch((err) => {
-                                console.log("保存 Token 到 Redis 中失败", err);
+            bcrypt
+                .hash(password, this.#saltRounds)
+                .then((hashedPassword) => {
+                    return User.createUser(phone, hashedPassword);
+                })
+                .then((user) => {
+                    const payload = {
+                        userId: user.user_id,
+                        userName: user.user_name,
+                        phone: user.phone,
+                        createAt: user.create_at,
+                        avatarUrl: user.avatar_url,
+                    };
+                    // 生成 Access Token
+                    const accessToken = generateAccessToken(payload);
+                    // 生成 Refresh Token
+                    const refreshToken = generateRefreshToken(payload);
+                    // 保存 Token 到 Redis 中
+                    return Promise.all([
+                        this.redis.setex(
+                            `user:${phone}:accessToken`,
+                            this.#ACCESS_TOKEN_EXPIRES_IN,
+                            accessToken
+                        ),
+                        this.redis.setex(
+                            `user:${phone}:refreshToken`,
+                            this.#REFRESH_TOKEN_EXPIRES_IN,
+                            refreshToken
+                        ),
+                    ])
+                        .then((data) => {
+                            resolve({
+                                code: 201,
+                                message: "用户注册成功",
+                                data: { accessToken, refreshToken },
                             });
-                    })
-                    .catch((err) => {
-                        reject({
-                            code: 400,
-                            message: "用户注册失败",
-                            error: err,
+                        })
+                        .catch((err) => {
+                            console.log("保存 Token 到 Redis 中失败", err);
                         });
+                })
+                .catch((err) => {
+                    reject({
+                        code: 400,
+                        message: "用户注册失败",
+                        error: err,
                     });
-            });
+                });
         });
     }
 }
