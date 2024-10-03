@@ -237,6 +237,42 @@ class AuthService {
                 });
         });
     }
+
+    /**
+     * 刷新accessToken 和 refreshToken
+     */
+    refreshAccessTokenAndRefreshToken(user) {
+        return new Promise((resolve, reject) => {
+            // 重新生成新的 Access Token 和 Refresh Token
+            const newAccessToken = generateAccessToken(user);
+            const newRefreshToken = generateRefreshToken(user);
+            //将新的 Access Token 和 Refresh Token 更新到 Redis中
+            Promise.all([
+                this.redis.setex(
+                    `user:${user.phone}:accessToken`,
+                    this.#ACCESS_TOKEN_EXPIRES_IN,
+                    newAccessToken
+                ),
+                this.redis.setex(
+                    `user:${user.phone}:refreshToken`,
+                    this.#REFRESH_TOKEN_EXPIRES_IN,
+                    newRefreshToken
+                ),
+            ])
+                .then(() => {
+                    console.log("更新新的双token到Redis 成功");
+                    resolve({ newAccessToken, newRefreshToken });
+                })
+                .catch((err) => {
+                    console.log("更新新的双token到Redis 失败");
+                    reject({
+                        code: 510,
+                        message: "新双token保存到Redis失败",
+                        error: err,
+                    });
+                });
+        });
+    }
 }
 
 export default new AuthService();

@@ -1,7 +1,6 @@
 import { sendError, sendResponse } from "../utils/sendResponse.js";
 import authService from "../services/authService.js";
 import checkFunctions from "../utils/checkFunctions.js";
-import User from "../models/user.js";
 class AuthController {
     //发送验证码
     sendCaptcha(req, res) {
@@ -119,6 +118,29 @@ class AuthController {
             console.log("try,catch中的catch", err);
             sendError(res, err);
         }
+    }
+
+    // 使用 Refresh Token 重新生成 Access Token
+    refreshToken(req, res) {
+        const user = req.user;
+        authService
+            .refreshAccessTokenAndRefreshToken(user)
+            .then(({ newAccessToken, newRefreshToken }) => {
+                // 设置 HttpOnly Cookie
+                res.cookie("refreshToken", newRefreshToken, {
+                    httpOnly: true, // 防止JS访问
+                    sameSite: "Strict", // 防止CSRF攻击
+                    maxAge: 24 * 60 * 60 * 1000, // 1天
+                });
+                sendResponse(res, {
+                    code: 200,
+                    message: "刷新双token成功",
+                    data: { newAccessToken },
+                });
+            })
+            .catch((err) => {
+                sendError(res, err);
+            });
     }
 }
 
