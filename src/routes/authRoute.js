@@ -22,4 +22,7 @@ router.post(
     verifyRefreshToken,
     authController.refreshToken
 );
+
+// 手机号密码登录
+router.post("/login/phone-password", authController.loginWithPhonePassword);
 export default router;
