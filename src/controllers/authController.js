@@ -125,9 +125,9 @@ class AuthController {
         const user = req.user;
         authService
             .refreshAccessTokenAndRefreshToken(user)
-            .then(({ newAccessToken, newRefreshToken }) => {
+            .then(({ accessToken, refreshToken }) => {
                 // 设置 HttpOnly Cookie
-                res.cookie("refreshToken", newRefreshToken, {
+                res.cookie("refreshToken", refreshToken, {
                     httpOnly: true, // 防止JS访问
                     sameSite: "Strict", // 防止CSRF攻击
                     maxAge: 24 * 60 * 60 * 1000, // 1天
@@ -135,12 +135,48 @@ class AuthController {
                 sendResponse(res, {
                     code: 200,
                     message: "刷新双token成功",
-                    data: { newAccessToken },
+                    data: { accessToken },
                 });
             })
             .catch((err) => {
                 sendError(res, err);
             });
+    }
+
+    //手机号密码登录
+    loginWithPhonePassword(req, res) {
+        console.log("使用手机号密码登录");
+        try {
+            //获取手机号及密码
+            const { phone, hashedPassword } = req.body;
+            console.log("phone:", phone);
+            console.log("hashedPassword:", hashedPassword);
+            if (!phone) {
+                throw { code: 400, message: "请输入手机号" };
+            }
+            if (!hashedPassword) {
+                throw { code: 400, message: "请输入登录密码" };
+            }
+            authService
+                .verifyPhonePasswordAndGenerateToken(phone, hashedPassword)
+                .then((data) => {
+                    console.log("验证手机号密码成功!", data);
+                    // 设置 HttpOnly Cookie
+                    res.cookie("refreshToken", data.data.refreshToken, {
+                        httpOnly: true, // 防止JS访问
+                        sameSite: "Strict", // 防止CSRF攻击
+                        maxAge: 24 * 60 * 60 * 1000, // 1天
+                    });
+                    delete data.data.refreshToken;
+                    sendResponse(res, data);
+                })
+                .catch((err) => {
+                    console.error("验证手机号密码失败！！！！", err);
+                    sendError(res, err);
+                });
+        } catch (err) {
+            sendError(res, err);
+        }
     }
 }
 
