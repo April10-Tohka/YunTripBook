@@ -1,10 +1,6 @@
 import { sendError } from "../utils/sendResponse.js";
 import jwt from "jsonwebtoken";
-import Redis from "ioredis";
-import config from "../config/index.js";
-
-// redis
-const redis = new Redis({ ...config.redis });
+import redis from "../utils/redisClient.js";
 
 // Token密钥
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
@@ -31,13 +27,13 @@ export const verifyAccessToken = (req, res, next) => {
                 throw { code: 401, message: err.message, error: err };
             }
             console.log(decoded);
-            const phone = decoded.phone;
+            const { phone, nonce } = decoded;
             // Redis 校验
             redis
-                .get(`user:${phone}:accessToken`)
-                .then((storeAccessToken) => {
+                .hget(`user:${phone}-accessToken`, "accessTokenNonce")
+                .then((storeNonce) => {
                     //如果 Redis 中的 Access Token 不存在或不匹配：
-                    if (accessToken !== storeAccessToken) {
+                    if (nonce !== storeNonce) {
                         throw {
                             code: 401,
                             message: "Unauthorized",
@@ -45,6 +41,7 @@ export const verifyAccessToken = (req, res, next) => {
                         };
                     }
                     // 说明 Access Token 仍然有效。
+
                     req.user = decoded;
                     next();
                 })
@@ -76,13 +73,13 @@ export const verifyRefreshToken = (req, res, next) => {
                 throw { code: 401, message: err.message, error: err };
             }
             console.log("decoded", decoded);
-            const phone = decoded.phone;
+            const { phone, nonce } = decoded;
             // Redis 校验
             redis
-                .get(`user:${phone}:refreshToken`)
-                .then((storeRefreshToken) => {
+                .hget(`user:${phone}-refreshToken`, "refreshTokenNonce")
+                .then((storeNonce) => {
                     //如果 Redis 中的 Access Token 不存在或不匹配：
-                    if (refreshToken !== storeRefreshToken) {
+                    if (nonce !== storeNonce) {
                         throw {
                             code: 403,
                             message: "Forbidden",
