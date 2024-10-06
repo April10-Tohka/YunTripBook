@@ -11,6 +11,10 @@ const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "1d";
 
 // 生成访问令牌
 export const generateAccessToken = (payload) => {
+    //如果payload存在属性password_hash，删除
+    if (payload.password_hash) {
+        delete payload.password_hash;
+    }
     const accessTokenNonce = crypto.randomUUID();
     payload.nonce = accessTokenNonce;
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {
@@ -21,6 +25,10 @@ export const generateAccessToken = (payload) => {
 
 // 生成刷新令牌
 export const generateRefreshToken = (payload) => {
+    //如果payload存在属性password_hash，删除
+    if (payload.password_hash) {
+        delete payload.password_hash;
+    }
     const refreshTokenNonce = crypto.randomUUID();
     payload.nonce = refreshTokenNonce;
     const refreshToken = jwt.sign(payload, REFRESH_TOKEN_SECRET, {
