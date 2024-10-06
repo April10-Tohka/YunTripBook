@@ -41,7 +41,6 @@ export const verifyAccessToken = (req, res, next) => {
                         };
                     }
                     // 说明 Access Token 仍然有效。
-
                     req.user = decoded;
                     next();
                 })
@@ -88,7 +87,6 @@ export const verifyRefreshToken = (req, res, next) => {
                     }
                     // 说明 Refresh Token 仍然有效。
                     console.log("说明 Refresh Token 仍然有效。");
-                    delete decoded.exp;
                     req.user = decoded;
                     next();
                     // 下一步: 生成一个新的 Access Token 和 Refresh Token并返回给前端

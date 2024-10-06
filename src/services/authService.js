@@ -1,5 +1,3 @@
-import Redis from "ioredis";
-import config from "../config/index.js";
 import bcrypt from "bcrypt";
 import User from "../models/user.js";
 import {
@@ -16,16 +14,14 @@ class AuthService {
     #saltRounds = 10; // 哈希盐值
     #ACCESS_TOKEN_EXPIRES_IN = 15 * 60; // accessToken过期时间15min
     #REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24; // refreshToken过期时间1d
-    constructor() {
-        this.redis = new Redis({ ...config.redis });
-    }
+
     /*
     生成验证码并发送
      */
     generateCaptchaAndSend(phone) {
         return new Promise((resolve, reject) => {
             // 检查该手机号是否在冷却期内
-            this.redis
+            redis
                 .get(`cooldown:${phone}`)
                 .then((cooldown) => {
                     if (cooldown) {
@@ -36,7 +32,7 @@ class AuthService {
                         };
                     }
                     //检查该手机号是否超过每天的发送次数上限
-                    return this.redis.get(`send_attempts:${phone}`);
+                    return redis.get(`send_attempts:${phone}`);
                 })
                 .then((sendAttempts) => {
                     if (sendAttempts >= this.#MAX_DAILY_SEND_ATTEMPTS) {
@@ -51,32 +47,26 @@ class AuthService {
                     ).join("");
 
                     //存储验证码到 Redis，设置3分钟过期时间
-                    return this.redis
-                        .setex(`captcha:${phone}`, this.#CODE_EXPIRE_TIME, code)
-                        .then(() => {
-                            //设置该手机号获取验证码冷却时间 60 秒
-                            return this.redis.setex(
-                                `cooldown:${phone}`,
-                                this.#SEND_COOLDOWN_TIME,
-                                true
-                            );
-                        })
-                        .then(() => {
-                            //更新发送验证码次数
-                            return this.redis
-                                .incr(`send_attempts:${phone}`)
-                                .then(() => {
-                                    //设置每日发送验证码次数的过期时间
-                                    return this.redis.expire(
-                                        `send_attempts:${phone}`,
-                                        86400
-                                    );
-                                });
-                        })
-                        .then(() => {
-                            //模拟发送验证码(后续使用外部API)
-                            console.log(`Sending captcha ${code} to ${phone}`);
-                        });
+                    //设置该手机号获取验证码冷却时间 60 秒
+                    //更新发送验证码次数
+                    //设置每日发送验证码次数的过期时间
+                    return Promise.all([
+                        redis.setex(
+                            `captcha:${phone}`,
+                            this.#CODE_EXPIRE_TIME,
+                            code
+                        ),
+                        redis.setex(
+                            `cooldown:${phone}`,
+                            this.#SEND_COOLDOWN_TIME,
+                            true
+                        ),
+                        redis.incr(`send_attempts:${phone}`),
+                        redis.expire(`send_attempts:${phone}`, 86400),
+                    ]).then(() => {
+                        //todo:模拟发送验证码(后续未来使用外部API)
+                        console.log(`Sending captcha ${code} to ${phone}`);
+                    });
                 })
                 .then(() => {
                     //响应发送验证码完成
@@ -110,7 +100,7 @@ class AuthService {
                     }
                     //不存在,继续注册流程
                     // 检查该手机号是否因验证失败次数过多而被冷却
-                    return this.redis.hget(
+                    return redis.hget(
                         `phone:${phone}`,
                         "fail_attempts_cooldown"
                     );
@@ -124,7 +114,7 @@ class AuthService {
                         };
                     }
                     //检查验证码是否正确
-                    return this.redis.get(`captcha:${phone}`);
+                    return redis.get(`captcha:${phone}`);
                 })
                 .then((storeCaptcha) => {
                     console.log("storeCode:", storeCaptcha);
@@ -138,16 +128,16 @@ class AuthService {
                     //验证验证码不通过
                     if (captcha !== storeCaptcha) {
                         //增加验证失败次数
-                        return this.redis
+                        return redis
                             .hincrby(`phone:${phone}`, "fail_attempts", 1)
                             .then((failAttempts) => {
                                 //达到最大失败次数，该手机号无法继续输入验证码并设置 30 分钟的冷却时间
                                 if (failAttempts >= this.#MAX_FAILED_ATTEMPTS) {
                                     return Promise.all([
-                                        this.redis.hset(`phone:${phone}`, {
+                                        redis.hset(`phone:${phone}`, {
                                             fail_attempts_cooldown: true,
                                         }),
-                                        this.redis.expire(
+                                        redis.expire(
                                             `phone:${phone}`,
                                             this.#FAILED_ATTEMPTS_COOLDOWN
                                         ),
@@ -167,7 +157,7 @@ class AuthService {
                             });
                     }
                     //验证码通过,删除 Redis 中的验证码和失败次数记录
-                    return this.redis
+                    return redis
                         .del([`captcha:${phone}`, `phone:${phone}`])
                         .then(() => {
                             resolve({ message: "验证码通过" });
@@ -193,13 +183,7 @@ class AuthService {
                 })
                 .then(({ data }) => {
                     console.log("创建用户之后,", data);
-                    const payload = {
-                        userId: data.user_id,
-                        userName: data.user_name,
-                        phone: data.phone,
-                        createAt: data.create_at,
-                        avatarUrl: data.avatar_url,
-                    };
+                    const payload = data;
                     // 生成 Access Token
                     const { accessToken, accessTokenNonce } =
                         generateAccessToken(payload);
@@ -234,6 +218,7 @@ class AuthService {
                         })
                         .catch((err) => {
                             console.log("保存 Token 到 Redis 中失败", err);
+                            return Promise.reject(err);
                         });
                 })
                 .catch((err) => {
@@ -307,7 +292,7 @@ class AuthService {
                     user = queryResult.user;
                     console.log("查看该用户user:", user);
                     // 如果用户存在，检查账户是否被锁定或处于冷却期
-                    return this.redis.hget(`user:${phone}`, "isLocked");
+                    return redis.hget(`user:${phone}`, "isLocked");
                 })
                 .then((isLocked) => {
                     console.log("该手机号是否被锁住", isLocked);
@@ -325,17 +310,17 @@ class AuthService {
                     // 如果密码不匹配，记录一次失败尝试，返回模糊错误信息（如“手机号或密码错误”）。
                     if (!result) {
                         // 增加验证失败次数
-                        return this.redis
+                        return redis
                             .hincrby(`user:${phone}`, "fail_attempts_login", 1)
                             .then((failAttempts) => {
                                 console.log("返回验证失败次数", failAttempts);
                                 // 达到最大失败次数，锁定该手机号，并设置 30 分钟的冷却时间
                                 if (failAttempts >= this.#MAX_FAILED_ATTEMPTS) {
                                     return Promise.all([
-                                        this.redis.hset(`user:${phone}`, {
+                                        redis.hset(`user:${phone}`, {
                                             isLocked: true,
                                         }),
-                                        this.redis.expire(
+                                        redis.expire(
                                             `user:${phone}`,
                                             this.#FAILED_ATTEMPTS_COOLDOWN
                                         ),
@@ -359,7 +344,7 @@ class AuthService {
                     // 密码匹配，删除 Redis 中 失败次数记录
 
                     console.log("密码匹配成功！准备删除失败次数记录");
-                    return this.redis.del(`user:${phone}`);
+                    return redis.del(`user:${phone}`);
                 })
                 .then(() => {
                     // 生成双token，存储在Redis中，并返回给前端
