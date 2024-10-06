@@ -1,10 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-
+import prisma from "../utils/prismaClient.js";
 class User {
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     /**
      * 创建一个用户
      * @param phone 手机号
@@ -13,7 +8,7 @@ class User {
      */
     createUser(phone, hashedPassword) {
         return new Promise((resolve, reject) => {
-            this.prisma.user
+            prisma.user
                 .create({
                     data: {
                         phone,
@@ -35,17 +30,16 @@ class User {
      */
     queryUserByPhone(phone) {
         return new Promise((resolve, reject) => {
-            this.prisma.user
+            prisma.user
                 .findFirst({
                     where: {
                         phone,
                     },
                 })
                 .then((result) => {
-                    console.log("数据库查询成功！user:", result);
+                    console.log("数据库查询成功！结果为user|null:", result);
                     //数据库中存在该用户
                     if (result) {
-                        console.log("数据库中存在该用户user", result);
                         resolve({ exit: true, user: result });
                     }
                     resolve({ exit: false, user: result });
