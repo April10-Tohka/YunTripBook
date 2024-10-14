@@ -8,6 +8,7 @@ import {
     loggerMiddleWare,
     loggerErrorMiddleWare,
 } from "./middlewares/logger.js";
+import { setResponseHeader } from "./middlewares/CORS.js";
 
 // 引入路由中间件
 import { verifyAccessToken } from "./middlewares/verifyToken.js";
@@ -16,6 +17,7 @@ import { verifyAccessToken } from "./middlewares/verifyToken.js";
 const app = express();
 
 //全局中间件
+app.use(setResponseHeader);
 app.use(loggerMiddleWare);
 app.use(express.json());
 
