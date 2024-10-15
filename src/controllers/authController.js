@@ -94,9 +94,9 @@ class AuthController {
             }
             // 接受用户输入的密码并去除两端的空白字符
             password = password.trim();
-            if (!checkFunctions.validatePassword(password)) {
-                throw { code: 400, message: "密码不符合复杂度要求" };
-            }
+            // if (!checkFunctions.validatePassword(password)) {
+            //     throw { code: 400, message: "密码不符合复杂度要求" };
+            // }
             authService
                 .setPasswordAndCreateUser(phone, password)
                 .then((data) => {
@@ -175,6 +175,50 @@ class AuthController {
                     sendError(res, err);
                 });
         } catch (err) {
+            sendError(res, err);
+        }
+    }
+
+    //手机号验证码登录
+    loginWithPhoneCaptcha(req, res) {
+        try {
+            //获取客户端传来的手机号和密码
+            const { phone, captcha } = req.body;
+            //如果手机号或者密码为空
+            if (!phone) {
+                throw { code: 400, message: "需要手机号" };
+            }
+            if (!captcha) {
+                throw { code: 400, message: "需要验证码" };
+            }
+            if (!checkFunctions.isValidChinaMobile(phone)) {
+                throw { code: 400, message: "手机号码格式不正确" };
+            }
+            if (!checkFunctions.isValidCaptcha(captcha)) {
+                throw { code: 400, message: "验证码格式为六位数字" };
+            }
+            authService
+                .verifyPhoneCaptchaAndGenerateToken(phone, captcha)
+                .then((data) => {
+                    console.log("手机号验证码登录成功", data);
+                    // 设置 HttpOnly Cookie
+                    res.cookie("refreshToken", data.data.refreshToken, {
+                        httpOnly: true, // 防止JS访问
+                        sameSite: "Strict", // 防止CSRF攻击
+                        maxAge: 24 * 60 * 60 * 1000, // 1天
+                    });
+                    delete data.data.refreshToken;
+                    sendResponse(res, data);
+                })
+                .catch((err) => {
+                    console.log(
+                        "=>(authController.js:207) 手机号验证码登录失败",
+                        err
+                    );
+                    sendError(res, err);
+                });
+        } catch (err) {
+            console.log("try,catch中的catch", err);
             sendError(res, err);
         }
     }

@@ -6,7 +6,7 @@ import {
 } from "../utils/generateToken.js";
 import redis from "../utils/redisClient.js";
 class AuthService {
-    #CODE_EXPIRE_TIME = 180; // 验证码有效期：3分钟
+    #CODE_EXPIRE_TIME = 300; // 验证码有效期：5分钟
     #SEND_COOLDOWN_TIME = 60; // 验证码发送冷却时间：60秒
     #MAX_DAILY_SEND_ATTEMPTS = 5; // 每日最多发送验证码次数
     #MAX_FAILED_ATTEMPTS = 5; // 最大验证失败次数
@@ -46,7 +46,7 @@ class AuthService {
                         Math.floor(Math.random() * 10)
                     ).join("");
 
-                    //存储验证码到 Redis，设置3分钟过期时间
+                    //存储验证码到 Redis，设置5分钟过期时间
                     //设置该手机号获取验证码冷却时间 60 秒
                     //更新发送验证码次数
                     //设置每日发送验证码次数的过期时间
@@ -77,6 +77,85 @@ class AuthService {
                 })
                 .catch((err) => {
                     //响应发送验证码的错误
+                    reject(err);
+                });
+        });
+    }
+
+    /**
+     * 查询缓存中的手机验证码并校验
+     */
+    verifyCaptchaInRedis(phone, captcha) {
+        return new Promise((resolve, reject) => {
+            // 检查该手机号是否因验证失败次数过多而被冷却
+            redis
+                .hget(`phone:${phone}`, "fail_attempts_cooldown")
+                .then((isCooldown) => {
+                    console.log(`该手机号${phone}是否被冷却:${isCooldown}`);
+                    if (isCooldown) {
+                        throw {
+                            code: 429,
+                            message: "失败次数过多。请 30 分钟后重试。",
+                        };
+                    }
+                    //查询缓存中的手机验证码
+                    return redis.get(`captcha:${phone}`);
+                })
+                .then((storeCaptcha) => {
+                    console.log(
+                        "=>(authService.js:153) storeCaptcha",
+                        storeCaptcha
+                    );
+                    //如果缓存中未查询到验证码
+                    if (!storeCaptcha) {
+                        console.log("//如果缓存中未查询到验证码");
+                        throw {
+                            code: 400,
+                            message: "验证码错误，请重新输入或重新发送",
+                        };
+                    }
+                    //校验验证码不通过
+                    if (captcha !== storeCaptcha) {
+                        console.log("//校验验证码不通过");
+                        //增加验证失败次数
+                        return redis
+                            .hincrby(`phone:${phone}`, "fail_attempts", 1)
+                            .then((failAttempts) => {
+                                //达到最大失败次数，该手机号无法继续输入验证码并设置 30 分钟的冷却时间
+                                if (failAttempts >= this.#MAX_FAILED_ATTEMPTS) {
+                                    return Promise.all([
+                                        redis.hset(`phone:${phone}`, {
+                                            fail_attempts_cooldown: true,
+                                        }),
+                                        redis.expire(
+                                            `phone:${phone}`,
+                                            this.#FAILED_ATTEMPTS_COOLDOWN
+                                        ),
+                                    ]).then(() => {
+                                        throw {
+                                            code: 429,
+                                            message:
+                                                "失败次数过多。请 30 分钟后重试。",
+                                        };
+                                    });
+                                }
+                                //没有达到最大失败次数,无效验证码
+                                throw {
+                                    code: 400,
+                                    message: "验证码错误，请重新输入或重新发送",
+                                };
+                            });
+                    }
+                    //校验验证码通过,删除 Redis 中的验证码和失败次数记录
+                    console.log(
+                        "//校验验证码通过,删除 Redis 中的验证码和失败次数记录"
+                    );
+                    return redis.del([`captcha:${phone}`, `phone:${phone}`]);
+                })
+                .then(() => {
+                    resolve({ message: "验证码通过" });
+                })
+                .catch((err) => {
                     reject(err);
                 });
         });
@@ -392,6 +471,80 @@ class AuthService {
                 })
                 .catch((err) => {
                     console.log("catch:", err);
+                    reject(err);
+                });
+        });
+    }
+
+    /**
+     * 验证手机号验证码和生成token
+     * @param phone
+     * @param captcha
+     * @returns {Promise<unknown>}
+     */
+    verifyPhoneCaptchaAndGenerateToken(phone, captcha) {
+        return new Promise((resolve, reject) => {
+            let user;
+            //根据手机号查询用户是否存在
+            User.queryUserByPhone(phone)
+                .then((queryResult) => {
+                    console.log(
+                        "=>(authService.js:406) queryResult",
+                        queryResult
+                    );
+                    if (queryResult.exit) {
+                        user = queryResult.user;
+                        //查询缓存中的手机验证码并校验
+                        return this.verifyCaptchaInRedis(phone, captcha);
+                    }
+                })
+                .then(() => {
+                    //校验通过 jwt生成双token
+                    const { accessToken, accessTokenNonce } =
+                        generateAccessToken(user);
+                    const { refreshToken, refreshTokenNonce } =
+                        generateRefreshToken(user);
+                    // 设置token缓存,key为user:${phone}-accessToken value为token及其nonce
+                    return Promise.all([
+                        redis.hset(`user:${phone}-accessToken`, {
+                            accessToken,
+                            accessTokenNonce,
+                        }),
+                        redis.hset(`user:${phone}-refreshToken`, {
+                            refreshToken,
+                            refreshTokenNonce,
+                        }),
+                        redis.expire(
+                            `user:${phone}-accessToken`,
+                            this.#ACCESS_TOKEN_EXPIRES_IN
+                        ),
+                        redis.expire(
+                            `user:${phone}-refreshToken`,
+                            this.#REFRESH_TOKEN_EXPIRES_IN
+                        ),
+                    ])
+                        .then((saveResult) => {
+                            console.log("保存token到Redis中成功", saveResult);
+                            //清除通过数据库获取到用户信息
+                            user = null;
+                            //返回token给controller层
+                            resolve({
+                                code: 200,
+                                message: "用户登陆成功",
+                                data: { accessToken, refreshToken },
+                            });
+                        })
+                        .catch((err) => {
+                            console.log("保存 token到Redis失败", err);
+                            throw {
+                                code: 500,
+                                message: "保存 token到Redis失败",
+                                error: err,
+                            };
+                        });
+                })
+                .catch((err) => {
+                    console.log("=>(authService.js:490) err", err);
                     reject(err);
                 });
         });

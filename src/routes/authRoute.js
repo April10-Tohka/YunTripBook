@@ -7,8 +7,8 @@ import { verifyRefreshToken } from "../middlewares/verifyToken.js";
 
 const router = Router();
 
-//注册时发送验证码
-router.post("/register/send-captcha", authController.sendCaptcha);
+//发送验证码
+router.post("/send-captcha", authController.sendCaptcha);
 
 //注册时验证验证码
 router.post("/register/verify-captcha", authController.verifyCaptcha);
@@ -25,4 +25,7 @@ router.post(
 
 // 手机号密码登录
 router.post("/login/phone-password", authController.loginWithPhonePassword);
+
+//手机号验证码登录
+router.post("/login/phone-captcha", authController.loginWithPhoneCaptcha);
 export default router;
