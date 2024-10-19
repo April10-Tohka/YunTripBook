@@ -14,7 +14,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^5.20.0",
+    "@prisma/client": "^5.21.1",
     "ali-oss": "^6.21.0",
     "axios": "^1.7.6",
     "bcrypt": "^5.1.1",
@@ -30,6 +30,6 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
-    "prisma": "^5.20.0"
+    "prisma": "^5.21.1"
   }
 }

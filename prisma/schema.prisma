@@ -10,8 +10,8 @@ datasource db {
 model user {
   user_id              String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
   user_name            String?   @default("尊敬的会员") @db.VarChar(50)
-  phone                String    @unique(map: "user_unique_key_Phone") @db.Char(11)
-  password_hash        String    @db.Char(60)
+  phone                String?   @unique(map: "user_unique_key_phone") @db.Char(11)
+  password_hash        String?   @db.Char(60)
   create_at            DateTime? @default(dbgenerated("(now())")) @db.Timestamp(0)
   gender               String?   @db.Char(2)
   birthdate            DateTime? @db.Date
@@ -24,16 +24,20 @@ model user {
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model passenger {
-  passenger_id             Int    @id @default(dbgenerated("(uuid_short())"))
-  passenger_name           String @db.VarChar(20)
-  passenger_phone          String @db.Char(11)
-  passenger_id_card_number String @unique(map: "passenger_pk_passenger_id_card_number") @db.Char(18)
+  passenger_id             Int?
+  passenger_name           String? @db.VarChar(20)
+  passenger_phone          String? @db.Char(11)
+  passenger_id_card_number String? @db.Char(18)
+
+  @@ignore
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model flight {
-  flight_no            String    @id @db.VarChar(8)
+  flight_no            String?   @db.VarChar(8)
   aircraft_type        String?   @db.Char(3)
   depart_time          DateTime? @db.Time(0)
   arrive_time          DateTime? @db.Time(0)
@@ -50,4 +54,6 @@ model flight {
   price                Int?
   airline_company_name String?   @db.VarChar(10)
   airline_code         String?   @db.Char(2)
+
+  @@ignore
 }
