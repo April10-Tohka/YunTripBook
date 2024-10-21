@@ -37,23 +37,27 @@ model passenger {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model flight {
-  flight_no            String?   @db.VarChar(8)
-  aircraft_type        String?   @db.Char(3)
-  depart_time          DateTime? @db.Time(0)
-  arrive_time          DateTime? @db.Time(0)
-  depart_city_code     String?   @db.Char(3)
-  depart_port_name     String?   @db.VarChar(10)
-  depart_port_code     String?   @db.Char(3)
-  depart_terminal      String?   @db.Char(2)
-  arrive_city_code     String?   @db.Char(3)
-  arrive_port_name     String?   @db.VarChar(10)
-  arrive_port_code     String?   @db.Char(3)
-  arrive_terminal      String?   @db.Char(2)
-  depart_date          DateTime? @db.Date
-  on_time_rate         String?   @db.VarChar(4)
-  price                Int?
-  airline_company_name String?   @db.VarChar(10)
-  airline_code         String?   @db.Char(2)
+  flight_no             String    @db.VarChar(8)
+  aircraft_type         String?   @db.Char(3)
+  depart_time           DateTime? @db.Time(0)
+  arrive_time           DateTime? @db.Time(0)
+  depart_city_code      String    @db.Char(3)
+  depart_port_name      String?   @db.VarChar(10)
+  depart_port_code      String?   @db.Char(3)
+  depart_terminal       String?   @db.Char(2)
+  arrive_city_code      String    @db.Char(3)
+  arrive_port_name      String?   @db.VarChar(10)
+  arrive_port_code      String?   @db.Char(3)
+  arrive_terminal       String?   @db.Char(2)
+  depart_date           DateTime? @db.Date
+  on_time_rate          String?   @db.VarChar(4)
+  price                 Float?    @db.Float
+  airline_company_name  String?   @db.VarChar(10)
+  airline_code          String?   @db.Char(2)
+  current_week_schedule Json?
+  stop_city_name        String?   @db.VarChar(10)
+  week_schedule_str     String    @db.VarChar(255)
 
-  @@ignore
+  @@id([flight_no, week_schedule_str, arrive_city_code, depart_city_code])
+
 }
