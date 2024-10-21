@@ -2,7 +2,7 @@ import express from "express";
 //引入路由
 import uploadRoute from "./routes/uploadRoute.js";
 import authRoute from "./routes/authRoute.js";
-
+import homeRoute from "./routes/homeRoute.js";
 //引入全局中间件
 import {
     loggerMiddleWare,
@@ -23,6 +23,7 @@ app.use(express.json());
 
 //使用路由
 app.use("/api", uploadRoute);
+app.use("/api", homeRoute);
 app.use("/auth", authRoute);
 
 //测试路由
