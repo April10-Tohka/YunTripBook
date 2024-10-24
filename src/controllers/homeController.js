@@ -33,7 +33,7 @@ class HomeController {
             const { departureCityCode } = req.body || "BJS"; //获取出发城市代码
             HomeService.fetchCtripSearchRecommendCityData(departureCityCode)
                 .then((data) => {
-                    console.log("=>(homeController.js:37) data", data);
+                    // console.log("=>(homeController.js:37) data", data);
                     sendResponse(res, data);
                 })
                 .catch((err) => {

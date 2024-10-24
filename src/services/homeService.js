@@ -123,7 +123,7 @@ class HomeService {
         return new Promise((resolve, reject) => {
             ctripApiService(searchBoxRecommendApiConfig)
                 .then((data) => {
-                    console.log("=>(homeService.js:122) data", data);
+                    // console.log("=>(homeService.js:122) data", data);
                     const {
                         hotRecommend: { recommendCity },
                         indexedCity: { cityList, indexList },
