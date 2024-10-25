@@ -58,8 +58,9 @@ export const verifyAccessToken = (req, res, next) => {
 export const verifyRefreshToken = (req, res, next) => {
     console.log("验证refresh token 的中间件");
     try {
-        // 从cookie中获取refreshToken
-        const refreshToken = req.headers.cookie.split("=")[1];
+        //获取refreshToken
+        const refreshToken =
+            req.headers.refreshtoken && req.headers.refreshtoken.split(" ")[1];
         console.log("refreshToken:", refreshToken);
         if (!refreshToken) {
             throw { code: 401, message: "缺少refresh token" };
