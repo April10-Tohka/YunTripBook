@@ -126,16 +126,10 @@ class AuthController {
         authService
             .refreshAccessTokenAndRefreshToken(user)
             .then(({ accessToken, refreshToken }) => {
-                // 设置 HttpOnly Cookie
-                res.cookie("refreshToken", refreshToken, {
-                    httpOnly: true, // 防止JS访问
-                    sameSite: "Strict", // 防止CSRF攻击
-                    maxAge: 24 * 60 * 60 * 1000, // 1天
-                });
                 sendResponse(res, {
                     code: 200,
                     message: "刷新双token成功",
-                    data: { accessToken },
+                    data: { accessToken, refreshToken },
                 });
             })
             .catch((err) => {
@@ -161,13 +155,6 @@ class AuthController {
                 .verifyPhonePasswordAndGenerateToken(phone, hashedPassword)
                 .then((data) => {
                     console.log("验证手机号密码成功!", data);
-                    // 设置 HttpOnly Cookie
-                    res.cookie("refreshToken", data.data.refreshToken, {
-                        httpOnly: true, // 防止JS访问
-                        sameSite: "Strict", // 防止CSRF攻击
-                        maxAge: 24 * 60 * 60 * 1000, // 1天
-                    });
-                    delete data.data.refreshToken;
                     sendResponse(res, data);
                 })
                 .catch((err) => {
@@ -201,13 +188,6 @@ class AuthController {
                 .verifyPhoneCaptchaAndGenerateToken(phone, captcha)
                 .then((data) => {
                     console.log("手机号验证码登录成功", data);
-                    // 设置 HttpOnly Cookie
-                    res.cookie("refreshToken", data.data.refreshToken, {
-                        httpOnly: true, // 防止JS访问
-                        sameSite: "Strict", // 防止CSRF攻击
-                        maxAge: 24 * 60 * 60 * 1000, // 1天
-                    });
-                    delete data.data.refreshToken;
                     sendResponse(res, data);
                 })
                 .catch((err) => {
