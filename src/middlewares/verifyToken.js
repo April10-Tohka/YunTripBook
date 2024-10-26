@@ -63,14 +63,14 @@ export const verifyRefreshToken = (req, res, next) => {
             req.headers.refreshtoken && req.headers.refreshtoken.split(" ")[1];
         console.log("refreshToken:", refreshToken);
         if (!refreshToken) {
-            throw { code: 401, message: "缺少refresh token" };
+            throw { code: 403, message: "缺少refresh token,请重新登录" };
         }
         //验证refreshToken的有效性 (JWT校验)
         jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err, decoded) => {
             //JWT 校验失败
             if (err) {
                 console.log("JWT校验出错!", JSON.stringify(err));
-                throw { code: 401, message: err.message, error: err };
+                throw { code: 403, message: err.message, error: err };
             }
             console.log("decoded", decoded);
             const { phone, nonce } = decoded;
@@ -82,7 +82,7 @@ export const verifyRefreshToken = (req, res, next) => {
                     if (nonce !== storeNonce) {
                         throw {
                             code: 403,
-                            message: "Forbidden",
+                            message: "与数据库不匹配，请重新登录",
                             error: { detail: "请重新登录" },
                         };
                     }
