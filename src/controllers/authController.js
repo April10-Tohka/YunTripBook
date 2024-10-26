@@ -202,6 +202,25 @@ class AuthController {
             sendError(res, err);
         }
     }
+
+    //退出登录
+    logout(req, res) {
+        console.log("执行退出登录操作");
+        try {
+            //获取用户的手机号
+            const { phone } = req.body;
+            //如果手机号或者密码为空
+            if (!phone) {
+                throw { code: 400, message: "需要手机号" };
+            }
+            if (!checkFunctions.isValidChinaMobile(phone)) {
+                throw { code: 400, message: "手机号码格式不正确" };
+            }
+            authService.logoutAndClearJWT(phone).then((data) => {
+                sendResponse(res, data);
+            });
+        } catch (err) {}
+    }
 }
 
 export default new AuthController();

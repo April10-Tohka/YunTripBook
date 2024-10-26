@@ -452,12 +452,12 @@ class AuthService {
                     ])
                         .then((saveResult) => {
                             console.log("保存token到Redis中成功", saveResult);
-                            //清除通过数据库获取到用户信息
-                            user = null;
+                            //删除通过数据库获取到用户信息的password_hash
+                            delete user.password_hash;
                             resolve({
                                 code: 200,
                                 message: "用户登陆成功",
-                                data: { accessToken, refreshToken },
+                                data: { accessToken, refreshToken, user },
                             });
                         })
                         .catch((err) => {
@@ -525,13 +525,13 @@ class AuthService {
                     ])
                         .then((saveResult) => {
                             console.log("保存token到Redis中成功", saveResult);
-                            //清除通过数据库获取到用户信息
-                            user = null;
+                            //删除通过数据库获取到用户信息的password_hash
+                            delete user.password_hash;
                             //返回token给controller层
                             resolve({
                                 code: 200,
                                 message: "用户登陆成功",
-                                data: { accessToken, refreshToken },
+                                data: { accessToken, refreshToken, user },
                             });
                         })
                         .catch((err) => {
@@ -546,6 +546,21 @@ class AuthService {
                 .catch((err) => {
                     console.log("=>(authService.js:490) err", err);
                     reject(err);
+                });
+        });
+    }
+
+    //退出登录并清除JWT
+    logoutAndClearJWT(phone) {
+        return new Promise((resolve, reject) => {
+            //清除JWT
+            redis
+                .del([
+                    `user:${phone}-accessToken`,
+                    `user:${phone}-refreshToken`,
+                ])
+                .then(() => {
+                    resolve({ code: 200, message: "清除该手机号JWT成功" });
                 });
         });
     }

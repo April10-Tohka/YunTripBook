@@ -28,4 +28,7 @@ router.post("/login/phone-password", authController.loginWithPhonePassword);
 
 //手机号验证码登录
 router.post("/login/phone-captcha", authController.loginWithPhoneCaptcha);
+
+//退出登录
+router.post("/logout", authController.logout);
 export default router;
