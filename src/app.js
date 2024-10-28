@@ -3,6 +3,7 @@ import express from "express";
 import uploadRoute from "./routes/uploadRoute.js";
 import authRoute from "./routes/authRoute.js";
 import homeRoute from "./routes/homeRoute.js";
+import ticketRoute from "./routes/ticketRoute.js";
 //引入全局中间件
 import {
     loggerMiddleWare,
@@ -24,17 +25,20 @@ app.use(express.json());
 //使用路由
 app.use("/api", uploadRoute);
 app.use("/api", homeRoute);
+app.use("/api", ticketRoute);
 app.use("/auth", authRoute);
 
 //测试路由
 app.get("/test/verify-access-token", verifyAccessToken, (req, res) => {
     console.log("校验access token 路由,中间件通过后就会看到这句话");
     console.log("查看req.user:", req.user);
-    const refreshToken = req.headers.cookie.split("=")[1];
-    console.log("refreshToken:", refreshToken);
     res.json(req.user);
 });
-
+//无感刷新后，继续原来操作接口
+app.post("/test/continue-operation", verifyAccessToken, (req, res) => {
+    console.log("校验accesstoken通过过，会看到这句话");
+    res.status(200).json({ data: { a: 1, b: 2, c: 3 } });
+});
 //错误全局中间件
 app.use(loggerErrorMiddleWare);
 export default app;
