@@ -32,6 +32,30 @@ class CheckFunctions {
                 3
         );
     };
+
+    /**
+     * 校验身份证格式
+     * @param identity
+     * @returns {boolean}
+     */
+    validateIdentity(identity) {
+        if (!identity || identity.length !== 18) {
+            return false;
+        }
+        const chineseIDCardRegex =
+            /^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dxX]$/;
+        return chineseIDCardRegex.test(identity);
+    }
+
+    /**
+     * 校验中文名
+     * @param name 名字
+     * @returns {boolean}
+     */
+    chineseNameReg(name) {
+        const regex = /^[\u4e00-\u9fa5]{2,4}$/;
+        return regex.test(name);
+    }
 }
 
 export default new CheckFunctions();
