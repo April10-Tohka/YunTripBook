@@ -61,7 +61,7 @@ model flight {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model order {
-  order_id             String                @id @default(dbgenerated("(uuid_short())")) @db.Char(20)
+  order_id             String                @id @db.Char(36)
   order_status         Int?                  @default(0)
   user_id              String                @db.VarChar(36)
   passenger_name       String                @db.VarChar(20)
@@ -86,7 +86,7 @@ model order {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model order_status_change {
   id          Int       @id @default(autoincrement())
-  order_id    String?   @db.Char(20)
+  order_id    String?   @db.Char(36)
   old_status  Int?
   new_status  Int?
   change_time DateTime? @db.Timestamp(0)
