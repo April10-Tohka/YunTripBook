@@ -4,6 +4,7 @@ import uploadRoute from "./routes/uploadRoute.js";
 import authRoute from "./routes/authRoute.js";
 import homeRoute from "./routes/homeRoute.js";
 import ticketRoute from "./routes/ticketRoute.js";
+import orderRoute from "./routes/orderRoute.js";
 //引入全局中间件
 import {
     loggerMiddleWare,
@@ -27,7 +28,7 @@ app.use("/api", uploadRoute);
 app.use("/api", homeRoute);
 app.use("/api", ticketRoute);
 app.use("/auth", authRoute);
-
+app.use("/api", orderRoute);
 //测试路由
 app.get("/test/verify-access-token", verifyAccessToken, (req, res) => {
     console.log("校验access token 路由,中间件通过后就会看到这句话");
