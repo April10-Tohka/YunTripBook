@@ -16,6 +16,7 @@
   "dependencies": {
     "@prisma/client": "^5.21.1",
     "ali-oss": "^6.21.0",
+    "amqplib": "^0.10.4",
     "axios": "^1.7.6",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
