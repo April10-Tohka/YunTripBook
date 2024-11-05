@@ -128,6 +128,16 @@ class OrderService {
                 });
         });
     }
+
+    //取消用户的某个订单
+    cancelUserOrder(order_id) {
+        //
+        return new Promise((resolve, reject) => {
+            Order.cancelOrder(order_id).then(() => {
+                resolve({ code: 200, message: "订单已取消成功" });
+            });
+        });
+    }
 }
 
 export default new OrderService();

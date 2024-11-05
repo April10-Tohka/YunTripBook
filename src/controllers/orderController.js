@@ -1,4 +1,3 @@
-import orderService from "../services/orderService.js";
 import { sendError, sendResponse } from "../utils/sendResponse.js";
 import checkFunctions from "../utils/checkFunctions.js";
 import OrderService from "../services/orderService.js";
@@ -33,8 +32,7 @@ class OrderController {
             if (!checkFunctions.chineseNameReg(orderDetail.name)) {
                 throw { code: 400, message: "请输入正确的中文姓名" };
             }
-            orderService
-                .createOrderAndSaveToDB(orderDetail, userID)
+            OrderService.createOrderAndSaveToDB(orderDetail, userID)
                 .then((data) => {
                     console.log("创建订单service完成", data);
                     sendResponse(res, data);
@@ -52,6 +50,15 @@ class OrderController {
     queryOrder(req, res) {
         const { user_id } = req.user;
         OrderService.getUserAllOrdersAndProcessData(user_id).then((data) => {
+            sendResponse(res, data);
+        });
+    }
+
+    //取消订单
+    cancelOrder(req, res) {
+        //获取order_id
+        const { order_id } = req.body;
+        OrderService.cancelUserOrder(order_id).then((data) => {
             sendResponse(res, data);
         });
     }
