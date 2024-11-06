@@ -37,6 +37,7 @@ class Order {
         flightDetail.depart_date = new Date(
             flightDetail.depart_date
         ).toISOString();
+        //todo:对身份证进行脱敏
         const order_id = this.generateUniqueNumber();
         return new Promise((resolve, reject) => {
             prisma.order
