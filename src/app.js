@@ -20,9 +20,10 @@ import { verifyAccessToken } from "./middlewares/verifyToken.js";
 const app = express();
 
 //全局中间件
+app.use(express.urlencoded({ extended: true })); //解析 application/x-www-form-urlencoded 格式的数据 支付宝异步通知就是这个格式
+app.use(express.json()); //解析 JSON 格式的数据
 app.use(setResponseHeader);
 app.use(loggerMiddleWare);
-app.use(express.json());
 
 //使用路由
 app.use("/api", uploadRoute);
