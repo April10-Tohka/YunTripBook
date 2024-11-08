@@ -7,6 +7,8 @@ import alipaySdk from "./alipayConfig.js";
  */
 export const generateAlipayPaymentOrder = (orderInfo) => {
     const paymentParams = {
+        return_url: "http://localhost:5173/order",
+        notify_url: "http://8.138.9.94:3000/api/pay/alipay/notify",
         bizContent: {
             out_trade_no: orderInfo.out_trade_no,
             total_amount: orderInfo.total_amount,
