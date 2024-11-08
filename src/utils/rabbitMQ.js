@@ -50,8 +50,9 @@ const initRabbitMQ = () => {
 //延迟队列的消费者逻辑
 const delayQueueConsumer = (msg) => {
     console.log("=>(rabbitMQ.js:53) ", JSON.parse(msg.content.toString()));
-    const PENDINGPAY = 0;
+    const PENDINGPAY = 0; //待支付
     const CANCELLED = -1; //已取消
+    const PAID = 1; //已支付
     //获取订单id
     const { order_id } = JSON.parse(msg.content.toString());
     //查询该订单
@@ -61,11 +62,17 @@ const delayQueueConsumer = (msg) => {
         switch (order_status) {
             case PENDINGPAY:
                 console.log("15分钟过去了，该订单过期了还待支付，取消该订单");
+                //取消订单
                 Order.cancelOrder(order_id)
                     .then(() =>
+                        //更新订单状态
                         OrderStatusChange.updateOrderStatus(order_id, CANCELLED)
                     )
                     .then(() => {
+                        console.log(
+                            "取消订单和更新订单状态完成后，确认该消息已处理"
+                        );
+                        //确认消息已处理
                         channel.ack(msg);
                     });
                 break;
