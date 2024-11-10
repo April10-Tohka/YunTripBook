@@ -1,6 +1,8 @@
 import prisma from "../utils/prismaClient.js";
 import * as crypto from "crypto";
 
+const CANCEL_ORDER = -1; //取消订单
+const SUCCESSFULLY_PAID_ORDER = 1; //支付成功订单
 class Order {
     //生成唯一的数字编号
     generateUniqueNumber() {
@@ -100,7 +102,24 @@ class Order {
             prisma.order
                 .update({
                     where: { order_id },
-                    data: { order_status: -1 },
+                    data: { order_status: CANCEL_ORDER },
+                })
+                .then(resolve);
+        });
+    }
+
+    //成功支付订单
+    completeOrderPayment(order_id, trade_no, trade_status, payment_method) {
+        return new Promise((resolve, reject) => {
+            prisma.order
+                .update({
+                    where: { order_id },
+                    data: {
+                        trade_no,
+                        trade_status,
+                        order_status: SUCCESSFULLY_PAID_ORDER,
+                        payment_method,
+                    },
                 })
                 .then(resolve);
         });
