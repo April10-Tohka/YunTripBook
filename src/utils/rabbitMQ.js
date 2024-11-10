@@ -66,7 +66,11 @@ const delayQueueConsumer = (msg) => {
                 Order.cancelOrder(order_id)
                     .then(() =>
                         //更新订单状态
-                        OrderStatusChange.updateOrderStatus(order_id, CANCELLED)
+                        OrderStatusChange.updateOrderStatus(
+                            order_id,
+                            CANCELLED,
+                            "支付超时，订单自动取消"
+                        )
                     )
                     .then(() => {
                         console.log(
