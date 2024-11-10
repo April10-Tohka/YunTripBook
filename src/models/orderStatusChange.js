@@ -4,10 +4,16 @@ class OrderStatusChange {
     /**
      * 创建一条订单状态变化的记录
      * @param order_id 订单号
-     * @param old_status
-     * @param new_status
+     * @param old_status 订单的旧状态
+     * @param new_status 订单的新状态
+     * @param change_reason 订单状态改变的原因
      */
-    createOrderStatusChange(order_id, old_status = 0, new_status = 0) {
+    createOrderStatusChange(
+        order_id,
+        old_status = 0,
+        new_status = 0,
+        change_reason = ""
+    ) {
         return new Promise((resolve, reject) => {
             console.log("=>(orderStatusChange.js:11) order_id", order_id);
             prisma.order_status_change
@@ -17,6 +23,7 @@ class OrderStatusChange {
                         old_status,
                         new_status,
                         change_time: new Date(),
+                        change_reason,
                     },
                 })
                 .then((data) => {
@@ -43,10 +50,11 @@ class OrderStatusChange {
     /**
      * 更新订单的状态
      * @param order_id 订单号
-     * @param new_status
+     * @param new_status 订单的新状态
+     * @param change_reason 订单状态变化的原因
      * @returns {Promise<unknown>}
      */
-    updateOrderStatus(order_id, new_status) {
+    updateOrderStatus(order_id, new_status, change_reason) {
         return new Promise((resolve, reject) => {
             //该订单下的所有状态记录，以change_time降序排列
             prisma.order_status_change
@@ -61,7 +69,8 @@ class OrderStatusChange {
                     return this.createOrderStatusChange(
                         order_id,
                         old_status,
-                        new_status
+                        new_status,
+                        change_reason
                     );
                 })
                 .then((updateResult) => {
