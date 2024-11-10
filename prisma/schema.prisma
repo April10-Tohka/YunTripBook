@@ -61,36 +61,35 @@ model flight {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model order {
-  order_id             String                @id @db.Char(36)
-  order_status         Int?                  @default(0)
-  user_id              String                @db.VarChar(36)
-  passenger_name       String                @db.VarChar(20)
-  passenger_identity   String                @db.Char(18)
-  passenger_phone      String                @db.Char(11)
-  flight_no            String                @db.Char(6)
-  depart               String?               @db.VarChar(20)
-  arrive               String?               @db.VarChar(20)
-  depart_date          DateTime?             @db.Date
+  order_id             String    @id @db.Char(36)
+  order_status         Int?      @default(0)
+  trade_no             String?   @db.Char(28)
+  trade_status         String?   @db.Char(14)
+  user_id              String    @db.VarChar(36)
+  passenger_name       String    @db.VarChar(20)
+  passenger_identity   String    @db.Char(18)
+  passenger_phone      String    @db.Char(11)
+  flight_no            String    @db.Char(6)
+  depart               String?   @db.VarChar(20)
+  arrive               String?   @db.VarChar(20)
+  depart_date          DateTime? @db.Date
   price                Int?
-  airline_company_name String?               @db.VarChar(20)
-  depart_port_name     String?               @db.VarChar(20)
-  depart_time          DateTime?             @db.Time(0)
-  arrive_port_name     String?               @db.VarChar(20)
-  arrive_time          DateTime?             @db.Time(0)
-  create_at            DateTime?             @default(now()) @db.Timestamp(0)
-  update_at            DateTime?             @default(now()) @db.Timestamp(0)
-  payment_method       String?               @db.Char(14)
-  order_status_change  order_status_change[]
+  airline_company_name String?   @db.VarChar(20)
+  depart_port_name     String?   @db.VarChar(20)
+  depart_time          DateTime? @db.Time(0)
+  arrive_port_name     String?   @db.VarChar(20)
+  arrive_time          DateTime? @db.Time(0)
+  create_at            DateTime? @default(now()) @db.Timestamp(0)
+  update_at            DateTime? @default(now()) @db.Timestamp(0)
+  payment_method       String?   @db.Char(14)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model order_status_change {
-  id          Int       @id @default(autoincrement())
-  order_id    String?   @db.Char(36)
-  old_status  Int?
-  new_status  Int?
-  change_time DateTime? @db.Timestamp(0)
-  order       order?    @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction, map: "order_status_change_order_order_id_fk")
-
-  @@index([order_id], map: "order_status_change_order_order_id_fk")
+  id            Int       @id @default(autoincrement())
+  order_id      String?   @db.Char(36)
+  old_status    Int?
+  new_status    Int?
+  change_time   DateTime? @db.Timestamp(0)
+  change_reason String?   @db.VarChar(20)
 }
