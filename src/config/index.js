@@ -1,7 +1,8 @@
 import "dotenv/config";
 const config = {
     server: {
-        PORT: process.env.SERVER_PORT,
+        PORT: process.env.PORT,
+        NODE_ENV: process.env.NODE_ENV,
     },
     redis: {
         host: process.env.REDIS_HOST,
